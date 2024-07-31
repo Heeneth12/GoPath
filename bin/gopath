@@ -6,28 +6,45 @@ if [ -z "$1" ]; then
 fi
 
 pattern=$1
+
+# Perform the search and list results
 results=$(find . -name "*$pattern*")
 if [ -z "$results" ]; then
     echo "No results found for pattern '$pattern'."
     exit 1
 fi
 
+# Display results with numbers
 echo "Search results for pattern '$pattern':"
 IFS=$'\n' read -d '' -r -a lines <<< "$results"
 for i in "${!lines[@]}"; do
     echo "$((i+1)). ${lines[i]}"
 done
 
-echo "Enter the number of the directory you want to navigate to:"
+# Prompt user to select a result
+echo "Enter the number of the directory or file you want to navigate to:"
 read selection
 
+# Validate the selection
 if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#lines[@]}" ]; then
     selected_path="${lines[$((selection-1))]}"
     if [ -d "$selected_path" ]; then
-        cd "$selected_path" || exit
+        # Print the directory path
+        echo "Navigate to directory: $selected_path"
+    elif [ -f "$selected_path" ]; then
+        if command -v xdg-open > /dev/null; then
+            xdg-open "$selected_path" || exit
+        elif command -v nano > /dev/null; then
+            nano "$selected_path" || exit
+        elif command -v vim > /dev/null; then
+            vim "$selected_path" || exit
+        else
+            echo "No suitable file editor found to open $selected_path."
+            exit 1
+        fi
+        echo "Opened file: $selected_path"
     else
-        echo "Selected path is not a directory: $selected_path"
-        exit 1
+        echo "Selected path is neither a file nor a directory: $selected_path"
     fi
 else
     echo "Invalid selection."
