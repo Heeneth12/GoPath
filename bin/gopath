@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: gopath <pattern>"
+    exit 1
+fi
+
+pattern=$1
+results=$(find . -name "*$pattern*")
+if [ -z "$results" ]; then
+    echo "No results found for pattern '$pattern'."
+    exit 1
+fi
+
+echo "Search results for pattern '$pattern':"
+IFS=$'\n' read -d '' -r -a lines <<< "$results"
+for i in "${!lines[@]}"; do
+    echo "$((i+1)). ${lines[i]}"
+done
+
+echo "Enter the number of the directory you want to navigate to:"
+read selection
+
+if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#lines[@]}" ]; then
+    selected_path="${lines[$((selection-1))]}"
+    if [ -d "$selected_path" ]; then
+        cd "$selected_path" || exit
+    else
+        echo "Selected path is not a directory: $selected_path"
+        exit 1
+    fi
+else
+    echo "Invalid selection."
+    exit 1
+fi
