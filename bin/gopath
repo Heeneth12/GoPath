@@ -29,8 +29,10 @@ read selection
 if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#lines[@]}" ]; then
     selected_path="${lines[$((selection-1))]}"
     if [ -d "$selected_path" ]; then
-        # Print the directory path
+        # Change to the selected directory
         echo "Navigate to directory: $selected_path"
+        cd "$selected_path" || exit
+        exec bash  # Start a new shell session in the new directory
     elif [ -f "$selected_path" ]; then
         if command -v xdg-open > /dev/null; then
             xdg-open "$selected_path" || exit
